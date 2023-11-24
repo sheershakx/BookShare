@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
@@ -28,14 +29,15 @@ import com.thex.bookshare.R
 import com.thex.bookshare.common.utils.LargeSpacer
 import com.thex.bookshare.common.utils.MediumSpacer
 import com.thex.bookshare.common.utils.SmallSpacer
+import com.thex.bookshare.common.utils.Strings
 import com.thex.bookshare.common.widgets.CustomOutlineTextField
 import com.thex.bookshare.common.widgets.CustomOutlinedButton
 
 @Composable
 fun RegistrationScreen(
-    viewModel: RegistrationViewModel= hiltViewModel()
+    viewModel: RegistrationViewModel = hiltViewModel()
 ) {
-
+    val context = LocalContext.current
     val email by viewModel.email.collectAsState()
     val password by viewModel.password.collectAsState()
     val confirmPassword by viewModel.confirmPassword.collectAsState()
@@ -60,25 +62,25 @@ fun RegistrationScreen(
                 modifier = Modifier.fillMaxWidth(0.9f),
                 inputWrapper = email,
                 onTextValueChange = viewModel::onEmailInputChanged,
-                label = "Email",
+                label = Strings.EMAIL,
             )
             SmallSpacer()
             CustomOutlineTextField(
                 modifier = Modifier.fillMaxWidth(0.9f),
                 inputWrapper = password,
                 onTextValueChange = viewModel::onPasswordInputChanged,
-                label = "Password"
+                label = Strings.PASSWORD
             )
             SmallSpacer()
             CustomOutlineTextField(
                 modifier = Modifier.fillMaxWidth(0.9f),
                 inputWrapper = confirmPassword,
                 onTextValueChange = viewModel::onConfirmPasswordInputChanged,
-                label = "Confirm password"
+                label = Strings.CONFIRM_PASSWORD
             )
             MediumSpacer()
             Text(
-                text = "Forgot password?",
+                text = Strings.FORGOT_PASSWORD,
                 style = TextStyle(
                     color = MaterialTheme.colorScheme.primary,
                     fontSize = 13.sp,
@@ -86,7 +88,11 @@ fun RegistrationScreen(
                 )
             )
             LargeSpacer()
-            CustomOutlinedButton(buttonName = "Submit", modifier = Modifier.fillMaxWidth(0.9f)) {
+            CustomOutlinedButton(
+                buttonName = Strings.SUBMIT,
+                modifier = Modifier.fillMaxWidth(0.9f)
+            ) {
+                viewModel.onTriggerEvent(RegistrationEvent.SubmitEvent)
             }
             Spacer(modifier = Modifier.weight(2f))
 

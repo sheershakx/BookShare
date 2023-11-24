@@ -22,18 +22,23 @@ class RegistrationViewModel @Inject constructor(
     val confirmPassword = savedStateHandle.getStateFlow(CONFIRM_PASSWORD, Pair("", ""))
 
     override fun onTriggerEvent(eventType: RegistrationEvent) {
-        TODO("Not yet implemented")
+        when (eventType) {
+            is RegistrationEvent.SubmitEvent -> {
+                //do registration of user
+            }
+        }
+
     }
 
     fun onEmailInputChanged(input: String) {
-        savedStateHandle[EMAIL] = email.value.copy(input,"")
+        savedStateHandle[EMAIL] = email.value.copy(input, "")
     }
 
     fun onPasswordInputChanged(input: String) {
-        savedStateHandle[PASSWORD] = password.value.copy(input,"")
+        savedStateHandle[PASSWORD] = password.value.copy(input, "")
     }
 
     fun onConfirmPasswordInputChanged(input: String) {
-        savedStateHandle[CONFIRM_PASSWORD] = confirmPassword.value.copy(input,"")
+        savedStateHandle[CONFIRM_PASSWORD] = confirmPassword.value.copy(input, "")
     }
 }

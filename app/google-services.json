@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "541371602999",
+    "firebase_url": "https://bookshare-2a738-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "bookshare-2a738",
+    "storage_bucket": "bookshare-2a738.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:541371602999:android:d164981afd837df246c7b2",
+        "android_client_info": {
+          "package_name": "com.thex.bookshare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvAdvpEAXo-s8fptO0lHdzpt5lqgAZsgM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
