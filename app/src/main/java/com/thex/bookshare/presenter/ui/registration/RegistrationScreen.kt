@@ -1,6 +1,7 @@
 package com.thex.bookshare.presenter.ui.registration
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,10 +14,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -30,17 +36,43 @@ import com.thex.bookshare.common.utils.LargeSpacer
 import com.thex.bookshare.common.utils.MediumSpacer
 import com.thex.bookshare.common.utils.SmallSpacer
 import com.thex.bookshare.common.utils.Strings
+import com.thex.bookshare.common.utils.showToast
 import com.thex.bookshare.common.widgets.CustomOutlineTextField
 import com.thex.bookshare.common.widgets.CustomOutlinedButton
+import com.thex.framework.base.mvi.BaseViewState
+import com.thex.framework.extension.cast
+import io.github.jan.supabase.exceptions.BadRequestRestException
 
 @Composable
 fun RegistrationScreen(
     viewModel: RegistrationViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val email by viewModel.email.collectAsState()
-    val password by viewModel.password.collectAsState()
-    val confirmPassword by viewModel.confirmPassword.collectAsState()
+    val email by viewModel.emailState.collectAsState()
+    val password by viewModel.passwordState.collectAsState()
+    val confirmPassword by viewModel.confirmPasswordState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    var isInLoginState by remember { mutableStateOf(true) }
+    val validateLoginFields by viewModel.validateLoginFields().collectAsState()
+    val validateSignupFields by viewModel.validateSignupFields().collectAsState()
+
+    LaunchedEffect(key1 = uiState) {
+        if (uiState is BaseViewState.Data) {
+            val resultState = uiState.cast<BaseViewState.Data<RegistrationState>>().value
+            isInLoginState = resultState.isInLoginState
+        }
+        if (uiState is BaseViewState.Error) {
+            val resultState = uiState.cast<BaseViewState.Error>()
+            if (resultState.throwable is BadRequestRestException) {
+                //user is already registered
+                //opt for login process instead
+                context.showToast((resultState.throwable as BadRequestRestException).error)
+            } else {
+                context.showToast(resultState.throwable.message.toString())
+            }
+        }
+
+    }
     Scaffold {
         Column(
             modifier = Modifier
@@ -57,6 +89,13 @@ fun RegistrationScreen(
                     .height(150.dp)
                     .width(240.dp), contentScale = ContentScale.Crop
             )
+            Text(
+                text = if (isInLoginState) "Login" else "Sign-up",
+                style = TextStyle(
+                    color = Color.Black,
+                    fontSize = 13.sp,
+                )
+            )
             Spacer(modifier = Modifier.weight(1f))
             CustomOutlineTextField(
                 modifier = Modifier.fillMaxWidth(0.9f),
@@ -72,12 +111,14 @@ fun RegistrationScreen(
                 label = Strings.PASSWORD
             )
             SmallSpacer()
-            CustomOutlineTextField(
-                modifier = Modifier.fillMaxWidth(0.9f),
-                inputWrapper = confirmPassword,
-                onTextValueChange = viewModel::onConfirmPasswordInputChanged,
-                label = Strings.CONFIRM_PASSWORD
-            )
+            if (!isInLoginState) {
+                CustomOutlineTextField(
+                    modifier = Modifier.fillMaxWidth(0.9f),
+                    inputWrapper = confirmPassword,
+                    onTextValueChange = viewModel::onConfirmPasswordInputChanged,
+                    label = Strings.CONFIRM_PASSWORD
+                )
+            }
             MediumSpacer()
             Text(
                 text = Strings.FORGOT_PASSWORD,
@@ -87,12 +128,24 @@ fun RegistrationScreen(
                     textDecoration = TextDecoration.Underline
                 )
             )
+            SmallSpacer()
+            Text(
+                text = Strings.SIGNUP_HYPERLINK,
+                style = TextStyle(
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 13.sp,
+                    textDecoration = TextDecoration.Underline
+                ), modifier = Modifier.clickable {
+                    viewModel.onTriggerEvent(RegistrationEvent.SwapRegistrationScreen(isInLoginState))
+                }
+            )
             LargeSpacer()
             CustomOutlinedButton(
-                buttonName = Strings.SUBMIT,
+                enabled = if (isInLoginState) validateLoginFields else validateSignupFields,
+                buttonName = if (isInLoginState) Strings.LOGIN else Strings.SIGNUP,
                 modifier = Modifier.fillMaxWidth(0.9f)
             ) {
-                viewModel.onTriggerEvent(RegistrationEvent.SubmitEvent)
+                viewModel.onTriggerEvent(RegistrationEvent.SubmitEvent(isInLoginState))
             }
             Spacer(modifier = Modifier.weight(2f))
 
