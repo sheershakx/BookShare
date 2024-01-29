@@ -44,6 +44,7 @@ class RegistrationViewModel @Inject constructor(
                 if (eventType.isInLoginState) {
                     //proceed for logging in user
                     safeLaunch {
+                        setState(BaseViewState.Loading)
                         supabaseAuth.signInWith(Email) {
                             email = emailState.value.first
                             password = passwordState.value.first
@@ -69,27 +70,11 @@ class RegistrationViewModel @Inject constructor(
         }
     }
 
-    fun validateLoginFields() =
-        combine(emailState, passwordState) { emailState, passwordState ->
-            emailState.first.isNotEmpty() && passwordState.first.isNotEmpty()
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), false)
-
-    fun validateSignupFields() =
-        combine(
-            emailState,
-            passwordState,
-            confirmPasswordState
-        ) { emailState, passwordState, confirmPasswordState ->
-            emailState.first.isNotEmpty()
-                    && passwordState.first.isNotEmpty()
-                    && confirmPasswordState.first.isNotEmpty()
-                    && passwordState.first == confirmPasswordState.first
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), false)
-
     private suspend fun observeAuthSessions() {
         supabaseAuth.sessionStatus.collect {
             when (it) {
                 is SessionStatus.Authenticated -> {
+                    setState(BaseViewState.Empty)
                     Timber.i("Authenticated:: ${it.session.user}")
                 }
 
@@ -109,16 +94,48 @@ class RegistrationViewModel @Inject constructor(
         }
     }
 
+    private fun passwordErrorCheck(input: String): String {
+        return if (input.isNullOrEmpty()) "Password can't be empty" else ""
+    }
+
+    private fun emailErrorCheck(input: String): String {
+        return if (input.isNullOrEmpty()) "Email can't be empty" else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(
+                input
+            ).matches()
+        ) "Invalid email format" else ""
+    }
+
+    fun validateLoginFields() =
+        combine(emailState, passwordState) { emailState, passwordState ->
+            if (emailState.second.isNotEmpty() || passwordState.second.isNotEmpty()) return@combine false
+            emailState.first.isNotEmpty() && passwordState.first.isNotEmpty()
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), false)
+
+    fun validateSignupFields() =
+        combine(
+            emailState,
+            passwordState,
+            confirmPasswordState
+        ) { emailState, passwordState, confirmPasswordState ->
+            if (emailState.second.isNotEmpty() || passwordState.second.isNotEmpty() || confirmPasswordState.second.isNotEmpty()) return@combine false
+            emailState.first.isNotEmpty()
+                    && passwordState.first.isNotEmpty()
+                    && confirmPasswordState.first.isNotEmpty()
+                    && passwordState.first == confirmPasswordState.first
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), false)
 
     fun onEmailInputChanged(input: String) {
-        savedStateHandle[EMAIL] = emailState.value.copy(input, "")
+        savedStateHandle[EMAIL] = emailState.value.copy(input, emailErrorCheck(input))
     }
 
     fun onPasswordInputChanged(input: String) {
-        savedStateHandle[PASSWORD] = passwordState.value.copy(input, "")
+        savedStateHandle[PASSWORD] = passwordState.value.copy(input, passwordErrorCheck(input))
     }
 
     fun onConfirmPasswordInputChanged(input: String) {
-        savedStateHandle[CONFIRM_PASSWORD] = confirmPasswordState.value.copy(input, "")
+        savedStateHandle[CONFIRM_PASSWORD] =
+            confirmPasswordState.value.copy(input, passwordErrorCheck(input))
     }
+
+
 }

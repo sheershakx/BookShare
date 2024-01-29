@@ -64,9 +64,12 @@ fun RegistrationScreen(
         if (uiState is BaseViewState.Error) {
             val resultState = uiState.cast<BaseViewState.Error>()
             if (resultState.throwable is BadRequestRestException) {
-                //user is already registered
+                //user is already registered or invalid login credentials
                 //opt for login process instead
-                context.showToast((resultState.throwable as BadRequestRestException).error)
+                context.showToast(
+                    (resultState.throwable as BadRequestRestException).description
+                        ?: (resultState.throwable as BadRequestRestException).error
+                )
             } else {
                 context.showToast(resultState.throwable.message.toString())
             }
@@ -89,12 +92,13 @@ fun RegistrationScreen(
                     .height(150.dp)
                     .width(240.dp), contentScale = ContentScale.Crop
             )
+            LargeSpacer()
             Text(
                 text = if (isInLoginState) "Login" else "Sign-up",
                 style = TextStyle(
                     color = Color.Black,
-                    fontSize = 13.sp,
-                )
+                    fontSize = 16.sp,
+                ),
             )
             Spacer(modifier = Modifier.weight(1f))
             CustomOutlineTextField(
@@ -143,7 +147,8 @@ fun RegistrationScreen(
             CustomOutlinedButton(
                 enabled = if (isInLoginState) validateLoginFields else validateSignupFields,
                 buttonName = if (isInLoginState) Strings.LOGIN else Strings.SIGNUP,
-                modifier = Modifier.fillMaxWidth(0.9f)
+                modifier = Modifier.fillMaxWidth(0.9f),
+                isLoading = uiState is BaseViewState.Loading
             ) {
                 viewModel.onTriggerEvent(RegistrationEvent.SubmitEvent(isInLoginState))
             }

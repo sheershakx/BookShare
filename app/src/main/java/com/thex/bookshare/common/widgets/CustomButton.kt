@@ -25,7 +25,7 @@ fun CustomOutlinedButton(
     modifier: Modifier = Modifier,
     buttonColor: ButtonColors = ButtonDefaults.buttonColors(
         containerColor = MaterialTheme.colorScheme.primary,
-        disabledContainerColor = MaterialTheme.colorScheme.primary,
+        disabledContainerColor = MaterialTheme.colorScheme.surfaceDim,
         contentColor = Color.White,
         disabledContentColor = Color.White
     ),
@@ -81,7 +81,7 @@ fun CustomOutlinedButton(
                 )
             }
             if (isLoading) {
-//                ViidaProgressBar()
+                CircularProgressIndicator()
             } else {
                 Text(
                     text = buttonName,
